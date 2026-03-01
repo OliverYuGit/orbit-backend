@@ -3,6 +3,7 @@ package com.orbit.mission.auth;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +11,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+@Slf4j
 @Service
 public class JwtService {
 
@@ -21,6 +23,8 @@ public class JwtService {
             @Value("${app.jwt.expiration-ms}") long expirationMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
+        log.info("JwtService initialized with secret length: {} bytes, first 8 chars: {}...", 
+                 secret.length(), secret.substring(0, Math.min(8, secret.length())));
     }
 
     public String generateToken(UserPrincipal principal, int tokenVersion) {
@@ -47,6 +51,7 @@ public class JwtService {
             parseToken(token);
             return true;
         } catch (Exception e) {
+            log.error("JWT validation failed: {}", e.getMessage(), e);
             return false;
         }
     }
