@@ -34,4 +34,7 @@ public class UserEntity extends BaseEntity {
 
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
+
+    @Column(name = "token_version", nullable = false)
+    private int tokenVersion = 0;
 }

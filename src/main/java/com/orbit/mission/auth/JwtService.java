@@ -23,10 +23,11 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(UserPrincipal principal) {
+    public String generateToken(UserPrincipal principal, int tokenVersion) {
         return Jwts.builder()
                 .subject(String.valueOf(principal.getId()))
                 .claim("username", principal.getUsername())
+                .claim("tv", tokenVersion)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(key)
@@ -56,5 +57,14 @@ public class JwtService {
 
     public String getUsername(String token) {
         return parseToken(token).get("username", String.class);
+    }
+
+    public int getTokenVersion(String token) {
+        Integer tv = parseToken(token).get("tv", Integer.class);
+        return tv != null ? tv : 0;
+    }
+
+    public long getExpirationMs() {
+        return expirationMs;
     }
 }
