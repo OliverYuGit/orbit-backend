@@ -4,6 +4,9 @@ import com.orbit.mission.activity.ActivityService;
 import com.orbit.mission.activity.ActivityType;
 import com.orbit.mission.common.PageResponse;
 import com.orbit.mission.common.ResourceNotFoundException;
+import com.orbit.mission.user.UserEntity;
+import com.orbit.mission.user.UserRepository;
+import com.orbit.mission.user.UserSummaryDto;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -14,9 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final ActivityService activityService;
+    private final UserRepository userRepository;
 
     @Transactional
     public TaskDto create(TaskCreateRequest req, Long actorId) {
@@ -41,11 +44,11 @@ public class TaskService {
 
         activityService.record(task.getId(), actorId, ActivityType.TASK_CREATED,
                 "Task created: " + task.getTitle(), null);
-        return new TaskDto(task);
+        return toDto(task);
     }
 
     public TaskDto get(Long id) {
-        return new TaskDto(findActive(id));
+        return toDto(findActive(id));
     }
 
     @Transactional
@@ -78,7 +81,7 @@ public class TaskService {
             activityService.record(task.getId(), actorId, ActivityType.TASK_UPDATED,
                     "Updated: " + String.join(", ", changes), null);
         }
-        return new TaskDto(task);
+        return toDto(task);
     }
 
     @Transactional
@@ -98,7 +101,7 @@ public class TaskService {
         activityService.record(id, actorId, ActivityType.TASK_STATUS_CHANGED,
                 "Status: " + from + " → " + toStatus,
                 Map.of("from", from.name(), "to", toStatus.name()));
-        return new TaskDto(task);
+        return toDto(task);
     }
 
     @Transactional
@@ -111,16 +114,44 @@ public class TaskService {
                 "Assignee changed",
                 Map.of("from", oldAssignee != null ? oldAssignee : "null",
                        "to", assigneeId != null ? assigneeId : "null"));
-        return new TaskDto(task);
+        return toDto(task);
     }
 
     public PageResponse<TaskDto> list(TaskFilter filter) {
+        int cappedPageSize = Math.min(filter.getPageSize(), 100);
         Specification<TaskEntity> spec = buildSpec(filter);
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Page<TaskEntity> page = taskRepository.findAll(spec,
-                PageRequest.of(filter.getPage() - 1, filter.getPageSize(), sort));
-        return new PageResponse<>(page.getContent().stream().map(TaskDto::new).toList(),
-                page.getTotalElements(), filter.getPage(), filter.getPageSize());
+                PageRequest.of(filter.getPage() - 1, cappedPageSize, sort));
+
+        // Batch-load users for all tasks
+        Set<Long> userIds = new HashSet<>();
+        for (TaskEntity t : page.getContent()) {
+            if (t.getAssigneeId() != null) userIds.add(t.getAssigneeId());
+            if (t.getCreatedById() != null) userIds.add(t.getCreatedById());
+        }
+        Map<Long, UserSummaryDto> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(UserEntity::getId, UserSummaryDto::new));
+
+        List<TaskDto> dtos = page.getContent().stream()
+                .map(t -> new TaskDto(t,
+                        t.getAssigneeId() != null ? userMap.get(t.getAssigneeId()) : null,
+                        t.getCreatedById() != null ? userMap.get(t.getCreatedById()) : null))
+                .toList();
+
+        return new PageResponse<>(dtos, page.getTotalElements(), filter.getPage(), cappedPageSize);
+    }
+
+    // --- helpers ---
+
+    private TaskDto toDto(TaskEntity task) {
+        UserSummaryDto assignee = task.getAssigneeId() != null
+                ? userRepository.findById(task.getAssigneeId()).map(UserSummaryDto::new).orElse(null)
+                : null;
+        UserSummaryDto createdBy = task.getCreatedById() != null
+                ? userRepository.findById(task.getCreatedById()).map(UserSummaryDto::new).orElse(null)
+                : null;
+        return new TaskDto(task, assignee, createdBy);
     }
 
     private Specification<TaskEntity> buildSpec(TaskFilter f) {

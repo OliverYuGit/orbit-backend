@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class TaskController {
     public ResponseEntity<ApiResponse<TaskDto>> create(
             @Valid @RequestBody TaskCreateRequest req,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(ApiResponse.ok(taskService.create(req, principal.getId())));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(taskService.create(req, principal.getId())));
     }
 
     @GetMapping("/{id}")

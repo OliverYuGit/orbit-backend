@@ -1,5 +1,6 @@
 package com.orbit.mission.comment;
 
+import com.orbit.mission.user.UserSummaryDto;
 import lombok.Getter;
 
 import java.time.Instant;
@@ -8,17 +9,15 @@ import java.time.Instant;
 public class CommentDto {
     private final Long id;
     private final Long taskId;
-    private final Long authorId;
     private final String content;
+    private final UserSummaryDto author;
     private final Instant createdAt;
-    private final Instant updatedAt;
 
-    public CommentDto(CommentEntity c) {
+    public CommentDto(CommentEntity c, UserSummaryDto author) {
         this.id = c.getId();
         this.taskId = c.getTaskId();
-        this.authorId = c.getAuthorId();
         this.content = c.getContent();
+        this.author = author;
         this.createdAt = c.getCreatedAt();
-        this.updatedAt = c.getUpdatedAt();
     }
 }
