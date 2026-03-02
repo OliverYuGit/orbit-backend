@@ -17,6 +17,7 @@ public class TaskDto {
     private final UserSummaryDto assignee;
     private final Long createdById;
     private final UserSummaryDto createdBy;
+    private final Long projectId;
     private final String source;
     private final List<String> tags;
     private final Instant dueAt;
@@ -33,6 +34,7 @@ public class TaskDto {
         this.assignee = assignee;
         this.createdById = t.getCreatedById();
         this.createdBy = createdBy;
+        this.projectId = t.getProjectId();
         this.source = t.getSource();
         this.tags = t.getTags();
         this.dueAt = t.getDueAt();

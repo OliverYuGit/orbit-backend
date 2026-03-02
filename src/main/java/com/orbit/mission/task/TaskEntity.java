@@ -40,6 +40,9 @@ public class TaskEntity extends BaseEntity {
     @Column(name = "created_by_id", nullable = false)
     private Long createdById;
 
+    @Column(name = "project_id")
+    private Long projectId;
+
     @Column(length = 64)
     private String source;
 

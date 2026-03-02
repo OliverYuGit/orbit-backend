@@ -13,6 +13,7 @@ public class TaskCreateRequest {
     private String description;
     private TaskPriority priority;
     private Long assigneeId;
+    private Long projectId;
     private String source;
     private List<String> tags;
     private Instant dueAt;

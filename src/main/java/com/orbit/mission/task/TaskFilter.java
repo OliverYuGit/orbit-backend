@@ -9,6 +9,7 @@ import java.util.List;
 public class TaskFilter {
     private List<TaskStatus> status;
     private Long assigneeId;
+    private Long projectId;
     private TaskPriority priority;
     private String tag;
     private String q;

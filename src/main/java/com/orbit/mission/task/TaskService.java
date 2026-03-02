@@ -37,6 +37,7 @@ public class TaskService {
         task.setPriority(req.getPriority() != null ? req.getPriority() : TaskPriority.P1);
         task.setAssigneeId(req.getAssigneeId());
         task.setCreatedById(actorId);
+        task.setProjectId(req.getProjectId());
         task.setSource(req.getSource());
         task.setTags(req.getTags());
         task.setDueAt(req.getDueAt());
@@ -71,6 +72,10 @@ public class TaskService {
                     Map.of("from", task.getAssigneeId() != null ? task.getAssigneeId() : "null",
                            "to", req.getAssigneeId()));
             task.setAssigneeId(req.getAssigneeId());
+        }
+        if (req.getProjectId() != null && !req.getProjectId().equals(task.getProjectId())) {
+            changes.add("project");
+            task.setProjectId(req.getProjectId());
         }
         if (req.getSource() != null) { task.setSource(req.getSource()); }
         if (req.getTags() != null) { task.setTags(req.getTags()); changes.add("tags"); }
@@ -163,6 +168,9 @@ public class TaskService {
             }
             if (f.getAssigneeId() != null) {
                 predicates.add(cb.equal(root.get("assigneeId"), f.getAssigneeId()));
+            }
+            if (f.getProjectId() != null) {
+                predicates.add(cb.equal(root.get("projectId"), f.getProjectId()));
             }
             if (f.getPriority() != null) {
                 predicates.add(cb.equal(root.get("priority"), f.getPriority()));

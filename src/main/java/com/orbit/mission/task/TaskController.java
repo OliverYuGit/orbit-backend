@@ -54,6 +54,7 @@ public class TaskController {
     public ResponseEntity<ApiResponse<PageResponse<TaskDto>>> list(
             @RequestParam(required = false) List<TaskStatus> status,
             @RequestParam(required = false) Long assigneeId,
+            @RequestParam(required = false) Long projectId,
             @RequestParam(required = false) TaskPriority priority,
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) String q,
@@ -62,6 +63,7 @@ public class TaskController {
         TaskFilter filter = new TaskFilter();
         filter.setStatus(status);
         filter.setAssigneeId(assigneeId);
+        filter.setProjectId(projectId);
         filter.setPriority(priority);
         filter.setTag(tag);
         filter.setQ(q);
